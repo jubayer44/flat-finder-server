@@ -1,4 +1,4 @@
-import { User } from "@prisma/client";
+import { User, UserRole, UserStatus } from "@prisma/client";
 import bcrypt from "bcrypt";
 import httpStatus from "http-status";
 import { Secret } from "jsonwebtoken";
@@ -7,11 +7,7 @@ import { jwtHelpers } from "../../../helper/jwtHelpers";
 import prisma from "../../../shared/prisma";
 import AppError from "../../errors/AppError";
 
-type TData = User & {
-  bio?: string;
-  profession: string;
-  address?: string;
-};
+type TData = User;
 
 const createUserIntoDB = async (data: TData) => {
   const hashedPassword = await bcrypt.hash(data.password, 12);
@@ -30,34 +26,20 @@ const createUserIntoDB = async (data: TData) => {
   }
 
   const userData = {
-    name: data.name,
+    username: data.username,
     email: data.email,
     password: hashedPassword,
+    role: UserRole.USER,
+    status: UserStatus.ACTIVATE,
   };
 
-  const userProfileData = {
-    bio: data?.bio,
-    profession: data?.profession,
-    address: data?.address,
-  };
-
-  const result = await prisma.$transaction(async (transactionClient) => {
-    const userCreatedData = await transactionClient.user.create({
-      data: userData,
-    });
-
-    await transactionClient.userProfile.create({
-      data: {
-        ...userProfileData,
-        userId: userCreatedData.id,
-      },
-    });
-
-    return userCreatedData;
+  const result = await prisma.user.create({
+    data: userData,
   });
+
   return {
     id: result.id,
-    name: result.name,
+    username: result.username,
     email: result.email,
     createdAt: result.createdAt,
     updatedAt: result.updatedAt,
@@ -68,6 +50,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
   const userData = await prisma.user.findUnique({
     where: {
       email: payload.email,
+      status: UserStatus.ACTIVATE,
     },
   });
 
@@ -84,17 +67,34 @@ const loginUser = async (payload: { email: string; password: string }) => {
     throw new AppError(httpStatus.UNAUTHORIZED, "Your password is invalid");
   }
 
-  const token = jwtHelpers.createToken(
-    { email: userData.email, id: userData.id },
+  const accessToken = jwtHelpers.createToken(
+    {
+      email: userData.email,
+      id: userData.id,
+      role: userData.role,
+    },
     config.jwt.JWT_SECRET as Secret,
     config.jwt.JWT_EXPIRES_IN as string
   );
 
+  const refreshToken = jwtHelpers.createToken(
+    {
+      email: userData.email,
+      id: userData.id,
+      role: userData.role,
+    },
+    config.jwt.REFRESH_SECRET as Secret,
+    config.jwt.REFRESH_EXPIRES_IN as string
+  );
+
   return {
-    id: userData.id,
-    name: userData.name,
-    email: userData.email,
-    token,
+    user: {
+      id: userData.id,
+      username: userData.username,
+      email: userData.email,
+      accessToken,
+    },
+    refreshToken,
   };
 };
 

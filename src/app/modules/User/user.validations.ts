@@ -2,9 +2,9 @@ import { z } from "zod";
 
 const CreateUser = z.object({
   body: z.object({
-    name: z.string({
-      required_error: "Name field is required",
-      invalid_type_error: "Name must be a string",
+    username: z.string({
+      required_error: "User Name field is required",
+      invalid_type_error: "User Name must be a string",
     }),
     email: z
       .string({
@@ -16,22 +16,6 @@ const CreateUser = z.object({
         required_error: "Password field is required",
       })
       .min(5, "Password too short - should be 5 chars minimum"),
-    bio: z
-      .string({
-        required_error: "Bio field is required",
-        invalid_type_error: "Bio must be a string",
-      })
-      .optional(),
-    profession: z.string({
-      required_error: "Profession field is required",
-      invalid_type_error: "Profession must be a string",
-    }),
-    address: z
-      .string({
-        required_error: "Address field is required",
-        invalid_type_error: "Address must be a string",
-      })
-      .optional(),
   }),
 });
 

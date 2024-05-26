@@ -18,11 +18,16 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const result = await UserServices.loginUser(req.body);
 
+  res.cookie("refreshToken", result.refreshToken, {
+    secure: false,
+    httpOnly: true,
+  });
+
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: "User logged in successfully",
-    data: result,
+    data: result?.user,
   });
 });
 
