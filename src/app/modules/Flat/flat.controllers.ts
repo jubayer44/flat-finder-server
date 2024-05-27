@@ -62,6 +62,17 @@ const getMyAllFlats = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getFlatById = catchAsync(async (req: Request, res: Response) => {
+  const result = await FlatServices.getFlatByIdFromDB(req.params?.flatId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Flat retrieved successfully",
+    data: result,
+  });
+});
+
 const updateFlat = catchAsync(async (req: Request, res: Response) => {
   const { flatId } = req.params;
   const token = req.headers.authorization || "";
@@ -75,9 +86,43 @@ const updateFlat = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const deleteFlatImage = catchAsync(async (req: Request, res: Response) => {
+  const { flatId } = req.params;
+  const imageLink = req.body.imageLink;
+  const token = req.headers.authorization || "";
+
+  const result = await FlatServices.deleteFlatImageFromDB(
+    flatId,
+    imageLink,
+    token
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Flat photo deleted successfully",
+    data: result,
+  });
+});
+
+const deleteFlatPost = catchAsync(async (req: Request, res: Response) => {
+  const { flatId } = req.params;
+  const token = req.headers.authorization || "";
+
+  const result = await FlatServices.deleteFlatPostFromDB(token, flatId);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Flat post deleted successfully",
+    data: result,
+  });
+});
+
 export const FlatControllers = {
   addFlat,
   getAllFlats,
   getMyAllFlats,
+  getFlatById,
   updateFlat,
+  deleteFlatImage,
+  deleteFlatPost,
 };

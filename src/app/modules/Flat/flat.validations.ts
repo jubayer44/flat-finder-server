@@ -69,7 +69,19 @@ const updateFlat = z.object({
   }),
 });
 
+const deleteFlatImage = z.object({
+  body: z.object({
+    imageLink: z
+      .string({
+        required_error: "Image Link field is required",
+        invalid_type_error: "Image Link must be a string",
+      })
+      .optional(),
+  }),
+});
+
 export const FlatValidationsSchema = {
   createFlat,
   updateFlat,
+  deleteFlatImage,
 };

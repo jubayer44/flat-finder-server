@@ -45,6 +45,7 @@ model FlatShare {
   userId    String
   status    FlatRequestStatus @default(PENDING)
   space     Int?
+  message   String?
   flat      Flat              @relation(fields: [flatId], references: [id])
   user      User              @relation(fields: [userId], references: [id])
   createdAt DateTime          @default(now())

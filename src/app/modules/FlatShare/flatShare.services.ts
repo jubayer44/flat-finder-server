@@ -1,21 +1,23 @@
-import { FlatRequestStatus, Prisma, UserRole } from "@prisma/client";
+import { FlatRequestStatus, FlatShare, Prisma, UserRole } from "@prisma/client";
 import httpStatus from "http-status";
 import isUserAuthorized from "../../../shared/isUserAuthorized";
 import prisma from "../../../shared/prisma";
 import AppError from "../../errors/AppError";
-import {
-  TFlatFilterableFields,
-  TUpdateFlatShareRequest,
-} from "../../interfaces/common";
 import { TPagination } from "../../interfaces/TPagination";
-import { flatSearchAbleFields } from "../../constant";
+import { TUpdateFlatShareRequest } from "../../interfaces/common";
 
-const flatShareRequestIntoDB = async (flatId: string, token: string) => {
+type TPayload = {
+  flatId: string;
+  message?: string;
+  space?: number;
+};
+
+const flatShareRequestIntoDB = async (payload: TPayload, token: string) => {
   const validUser = await isUserAuthorized(token);
 
   const flat = await prisma.flat.findUnique({
     where: {
-      id: flatId,
+      id: payload?.flatId,
     },
   });
   if (!flat) {
@@ -30,8 +32,8 @@ const flatShareRequestIntoDB = async (flatId: string, token: string) => {
   }
 
   const flatShareData = {
+    ...payload,
     userId: validUser.id as string,
-    flatId: flatId,
   };
 
   const result = await prisma.flatShare.create({

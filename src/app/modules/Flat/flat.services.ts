@@ -1,4 +1,4 @@
-import { Flat, Prisma } from "@prisma/client";
+import { Flat, Prisma, UserRole } from "@prisma/client";
 import httpStatus from "http-status";
 import isUserAuthorized from "../../../shared/isUserAuthorized";
 import prisma from "../../../shared/prisma";
@@ -172,27 +172,124 @@ const getMyAllFlatsFromDB = async (
   };
 };
 
+const getFlatByIdFromDB = async (flatId: string) => {
+  const result = await prisma.flat.findUniqueOrThrow({
+    where: {
+      id: flatId,
+    },
+  });
+
+  return result;
+};
+
 const updateFlatIntoDB = async (
   payload: Partial<Flat>,
   id: string,
   token: string
 ) => {
-  await isUserAuthorized(token);
+  const { photos, ...restData } = payload;
+
+  const updatedPhoto: string[] = [];
+
+  if (photos) {
+    photos.map((photo: string) => {
+      updatedPhoto.push(photo);
+    });
+  }
+
+  const validUser = await isUserAuthorized(token);
 
   const flat = await prisma.flat.findUnique({
     where: {
       id,
+      postedBy: validUser.id,
     },
   });
   if (!flat) {
     throw new AppError(httpStatus.NOT_FOUND, "Flat not found");
   }
 
+  flat.photos.map((photo) => {
+    updatedPhoto.push(photo);
+  });
+
   const result = await prisma.flat.update({
     where: {
       id,
     },
-    data: payload,
+    data: {
+      photos: updatedPhoto,
+      ...restData,
+    },
+  });
+
+  return result;
+};
+
+const deleteFlatImageFromDB = async (
+  flatId: string,
+  imageLink: string,
+  token: string
+) => {
+  const images: string[] = [];
+
+  const validUser = await isUserAuthorized(token);
+
+  const flatInfo = await prisma.flat.findUnique({
+    where: {
+      id: flatId,
+      postedBy: validUser.id,
+    },
+  });
+
+  if (!flatInfo) {
+    throw new AppError(httpStatus.NOT_FOUND, "Flat not found");
+  }
+
+  flatInfo.photos.map((photo: string) => {
+    if (photo !== imageLink) {
+      images.push(photo);
+    }
+  });
+
+  const updateImages = await prisma.flat.update({
+    where: {
+      id: flatId,
+    },
+    data: {
+      photos: images,
+    },
+  });
+
+  return updateImages;
+};
+
+const deleteFlatPostFromDB = async (token: string, flatId: string) => {
+  const validUser = await isUserAuthorized(token);
+
+  const flatInfo = await prisma.flat.findUnique({
+    where: {
+      id: flatId,
+    },
+  });
+
+  if (!flatInfo) {
+    throw new AppError(httpStatus.NOT_FOUND, "Flat is not found");
+  }
+
+  if (validUser.role === UserRole.USER) {
+    if (flatInfo?.postedBy !== validUser.id) {
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        "Your are not authorized to delete this flat post."
+      );
+    }
+  }
+
+  const result = await prisma.flat.delete({
+    where: {
+      id: flatId,
+    },
   });
 
   return result;
@@ -201,6 +298,9 @@ const updateFlatIntoDB = async (
 export const FlatServices = {
   addFlatIntoDB,
   getAllFlatsFromDB,
-  updateFlatIntoDB,
   getMyAllFlatsFromDB,
+  getFlatByIdFromDB,
+  updateFlatIntoDB,
+  deleteFlatImageFromDB,
+  deleteFlatPostFromDB,
 };

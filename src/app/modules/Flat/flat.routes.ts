@@ -22,11 +22,26 @@ router.get(
   FlatControllers.getMyAllFlats
 );
 
+router.get("/:flatId", FlatControllers.getFlatById);
+
 router.put(
   "/:flatId",
   auth(UserRole.ADMIN, UserRole.USER),
   validationRequest(FlatValidationsSchema.updateFlat),
   FlatControllers.updateFlat
+);
+
+router.delete(
+  "/:flatId/photo",
+  auth(UserRole.ADMIN, UserRole.USER),
+  validationRequest(FlatValidationsSchema.deleteFlatImage),
+  FlatControllers.deleteFlatImage
+);
+
+router.delete(
+  "/:flatId",
+  auth(UserRole.ADMIN, UserRole.USER),
+  FlatControllers.deleteFlatPost
 );
 
 export const FlatRoutes = router;

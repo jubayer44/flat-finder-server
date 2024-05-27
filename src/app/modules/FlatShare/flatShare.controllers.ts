@@ -9,9 +9,11 @@ import { FlatShareServices } from "./flatShare.services";
 
 const flatShareRequest = catchAsync(async (req: Request, res: Response) => {
   const token = req.headers.authorization || "";
-  const flatId = req.body?.flatId;
 
-  const result = await FlatShareServices.flatShareRequestIntoDB(flatId, token);
+  const result = await FlatShareServices.flatShareRequestIntoDB(
+    req.body,
+    token
+  );
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.CREATED,
