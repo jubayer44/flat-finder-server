@@ -7,6 +7,61 @@ import prisma from "../../../shared/prisma";
 import { UserStatus } from "@prisma/client";
 import bcrypt from "bcrypt";
 
+const loginUser = async (payload: { email: string; password: string }) => {
+  const userData = await prisma.user.findUnique({
+    where: {
+      email: payload.email,
+      status: UserStatus.ACTIVATE,
+    },
+  });
+
+  if (!userData) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const isPasswordValid = await bcrypt.compare(
+    payload.password,
+    userData.password
+  );
+
+  if (!isPasswordValid) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "Your password is invalid");
+  }
+
+  const accessToken = jwtHelpers.createToken(
+    {
+      id: userData.id,
+      username: userData.username,
+      email: userData.email,
+      role: userData.role,
+    },
+    config.jwt.JWT_SECRET as Secret,
+    config.jwt.JWT_EXPIRES_IN as string
+  );
+
+  const refreshToken = jwtHelpers.createToken(
+    {
+      id: userData.id,
+      username: userData.username,
+      email: userData.email,
+      role: userData.role,
+    },
+    config.jwt.REFRESH_SECRET as Secret,
+    config.jwt.REFRESH_EXPIRES_IN as string
+  );
+
+  return {
+    user: {
+      id: userData.id,
+      role: userData.role,
+      username: userData.username,
+      email: userData.email,
+      accessToken,
+    },
+    refreshToken,
+  };
+};
+
 const refreshToken = async (token: string) => {
   let decodedData;
   try {
@@ -28,6 +83,7 @@ const refreshToken = async (token: string) => {
   const accessToken = jwtHelpers.createToken(
     {
       id: userData?.id,
+      username: userData?.username,
       email: userData?.email,
       role: userData?.role,
     },
@@ -73,6 +129,7 @@ const changePassword = async (user: any, payload: any) => {
 };
 
 export const AuthServices = {
+  loginUser,
   refreshToken,
   changePassword,
 };

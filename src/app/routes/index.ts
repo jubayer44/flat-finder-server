@@ -1,9 +1,8 @@
 import express from "express";
 import { UserRoutes } from "../modules/User/user.routes";
 import { FlatRoutes } from "../modules/Flat/flat.routes";
-import { BookingRoutes } from "../modules/Booking/booking.routes";
-import { UserProfileRoutes } from "../modules/UserProfile/userProfile.routes";
 import { AuthRoutes } from "../modules/Auth/auth.routes";
+import { FlatShareRoutes } from "../modules/FlatShare/flatShare.routes";
 
 const router = express.Router();
 
@@ -22,11 +21,7 @@ const moduleRoutes = [
   },
   {
     path: "/",
-    route: BookingRoutes,
-  },
-  {
-    path: "/profile",
-    route: UserProfileRoutes,
+    route: FlatShareRoutes,
   },
 ];
 

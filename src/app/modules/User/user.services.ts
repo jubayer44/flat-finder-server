@@ -1,11 +1,12 @@
-import { User, UserRole, UserStatus } from "@prisma/client";
+import { Prisma, User, UserRole, UserStatus } from "@prisma/client";
 import bcrypt from "bcrypt";
 import httpStatus from "http-status";
-import { Secret } from "jsonwebtoken";
-import config from "../../../config";
-import { jwtHelpers } from "../../../helper/jwtHelpers";
+import isUserAuthorized from "../../../shared/isUserAuthorized";
 import prisma from "../../../shared/prisma";
+import { userSearchAbleFields } from "../../constant";
 import AppError from "../../errors/AppError";
+import { TPagination } from "../../interfaces/TPagination";
+import { TUserFilterableFields } from "../../interfaces/common";
 
 type TData = User;
 
@@ -46,59 +47,85 @@ const createUserIntoDB = async (data: TData) => {
   };
 };
 
-const loginUser = async (payload: { email: string; password: string }) => {
-  const userData = await prisma.user.findUnique({
-    where: {
-      email: payload.email,
-      status: UserStatus.ACTIVATE,
+const getAllUsersFromDB = async (
+  filters: TUserFilterableFields,
+  options: TPagination,
+  token: string
+) => {
+  const { searchTerm } = filters;
+
+  const page = Number(options.page) || 1;
+  const limit = Number(options.limit) || 5;
+
+  const andConditions: Prisma.UserWhereInput[] = [];
+
+  if (searchTerm) {
+    andConditions.push({
+      OR: userSearchAbleFields?.map((field) => ({
+        [field]: {
+          contains: searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  await isUserAuthorized(token);
+
+  const condition: Prisma.UserWhereInput = { AND: andConditions };
+
+  const result = await prisma.user.findMany({
+    where: condition,
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      status: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
     },
+    skip: (page - 1) * limit,
+    take: limit,
+    orderBy:
+      options?.sortBy && options.sortOrder
+        ? {
+            [options.sortBy]: options.sortOrder,
+          }
+        : {
+            createdAt: "desc",
+          },
   });
 
-  if (!userData) {
-    throw new AppError(httpStatus.NOT_FOUND, "User not found");
-  }
-
-  const isPasswordValid = await bcrypt.compare(
-    payload.password,
-    userData.password
-  );
-
-  if (!isPasswordValid) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "Your password is invalid");
-  }
-
-  const accessToken = jwtHelpers.createToken(
-    {
-      email: userData.email,
-      id: userData.id,
-      role: userData.role,
-    },
-    config.jwt.JWT_SECRET as Secret,
-    config.jwt.JWT_EXPIRES_IN as string
-  );
-
-  const refreshToken = jwtHelpers.createToken(
-    {
-      email: userData.email,
-      id: userData.id,
-      role: userData.role,
-    },
-    config.jwt.REFRESH_SECRET as Secret,
-    config.jwt.REFRESH_EXPIRES_IN as string
-  );
-
+  const total = await prisma.user.count({
+    where: condition,
+  });
   return {
-    user: {
-      id: userData.id,
-      username: userData.username,
-      email: userData.email,
-      accessToken,
-    },
-    refreshToken,
+    data: result,
+    total,
+    page,
+    limit,
   };
+};
+
+const updateUserIntoDB = async (
+  token: string,
+  payload: { username?: string; email?: string }
+) => {
+  const validUser = await isUserAuthorized(token);
+
+  const result = await prisma.user.update({
+    where: {
+      id: validUser.id,
+    },
+    data: payload,
+  });
+
+  return result;
 };
 
 export const UserServices = {
   createUserIntoDB,
-  loginUser,
+  getAllUsersFromDB,
+  updateUserIntoDB,
 };

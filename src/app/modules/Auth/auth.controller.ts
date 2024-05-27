@@ -1,8 +1,24 @@
 import { Request, Response } from "express";
-import catchAsync from "../../../shared/catchAsync";
-import { AuthServices } from "./auth.services";
-import sendResponse from "../../../shared/sendResponse";
 import httpStatus from "http-status";
+import catchAsync from "../../../shared/catchAsync";
+import sendResponse from "../../../shared/sendResponse";
+import { AuthServices } from "./auth.services";
+
+const loginUser = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthServices.loginUser(req.body);
+
+  res.cookie("refreshToken", result.refreshToken, {
+    secure: false,
+    httpOnly: true,
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User logged in successfully",
+    data: result?.user,
+  });
+});
 
 const refreshToken = catchAsync(async (req: Request, res: Response) => {
   const { refreshToken } = req.cookies;
@@ -29,6 +45,7 @@ const changePassword = catchAsync(
 );
 
 export const AuthControllers = {
+  loginUser,
   refreshToken,
   changePassword,
 };

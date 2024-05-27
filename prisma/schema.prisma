@@ -15,9 +15,9 @@ model User {
   status    UserStatus  @default(ACTIVATE)
   role      UserRole    @default(USER)
   flatShare FlatShare[]
+  flat      Flat[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
-  Flat      Flat[]
 
   @@map("users")
 }
@@ -25,18 +25,16 @@ model User {
 model Flat {
   id          String      @id @default(uuid())
   location    String
-  bedrooms    Int
   description String
-  rentAmount  Int
-  amenities   String?
-  photo       String
-  userId      String
-  user        User        @relation(fields: [userId], references: [id])
-  flatShare   FlatShare[]
+  rentAmount  Float
+  bedrooms    Int
+  amenities   String
+  photos      String[]
+  postedBy    String
+  user        User        @relation(fields: [postedBy], references: [id])
+  requests    FlatShare[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  Amenities   Amenities[]
-  FlatImage   FlatImage[]
 
   @@map("flats")
 }
@@ -46,31 +44,13 @@ model FlatShare {
   flatId    String
   userId    String
   status    FlatRequestStatus @default(PENDING)
+  space     Int?
   flat      Flat              @relation(fields: [flatId], references: [id])
   user      User              @relation(fields: [userId], references: [id])
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 
   @@map("flat_shares")
-}
-
-model Amenities {
-  id     String @id @default(uuid())
-  title  String
-  flatId String
-  flat   Flat   @relation(fields: [flatId], references: [id])
-
-  @@map("amenities")
-}
-
-model FlatImage {
-  id          String  @id @default(uuid())
-  url         String
-  flatId      String
-  flat        Flat    @relation(fields: [flatId], references: [id])
-  flatShareId String?
-
-  @@map("flat_images")
 }
 
 enum UserStatus {
@@ -87,6 +67,4 @@ enum FlatRequestStatus {
   PENDING
   APPROVED
   REJECTED
-
-  @@map("BookingStatus")
 }

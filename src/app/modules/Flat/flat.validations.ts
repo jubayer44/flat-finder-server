@@ -2,21 +2,9 @@ import { z } from "zod";
 
 const createFlat = z.object({
   body: z.object({
-    squareFeet: z.number({
-      required_error: "Square feet field is required",
-      invalid_type_error: "Square feet must be a number",
-    }),
-    totalBedrooms: z.number({
-      required_error: "Total bedrooms field is required",
-      invalid_type_error: "Total bedrooms must be a number",
-    }),
-    totalRooms: z.number({
-      required_error: "Total rooms field is required",
-      invalid_type_error: "Total rooms must be a number",
-    }),
-    utilitiesDescription: z.string({
-      required_error: "Utilities description field is required",
-      invalid_type_error: "Utilities description must be a string",
+    bedrooms: z.number({
+      required_error: "Bedrooms field is required",
+      invalid_type_error: "Bedrooms must be a number",
     }),
     location: z.string({
       required_error: "Location field is required",
@@ -26,68 +14,57 @@ const createFlat = z.object({
       required_error: "Description field is required",
       invalid_type_error: "Description must be a string",
     }),
-    rent: z.number({
+    rentAmount: z.number({
       required_error: "Rent field is required",
       invalid_type_error: "Rent must be a number",
     }),
-    availability: z
-      .boolean({
-        invalid_type_error: "Availability must be true or false",
+    amenities: z
+      .string({
+        required_error: "amenities field is required",
+        invalid_type_error: "amenities must be a string",
       })
       .optional(),
-    advanceAmount: z.number({
-      required_error: "Advance amount field is required",
-      invalid_type_error: "Advance amount must be a number",
-    }),
+    photos: z
+      .array(z.string().url("Each photo must be a valid URL"))
+      .nonempty("At least one photo is required"),
   }),
 });
 
 const updateFlat = z.object({
   body: z.object({
-    squareFeet: z
+    bedrooms: z
       .number({
-        invalid_type_error: "Square feet must be a number",
-      })
-      .optional(),
-    totalBedrooms: z
-      .number({
+        required_error: "Total bedrooms field is required",
         invalid_type_error: "Total bedrooms must be a number",
-      })
-      .optional(),
-    totalRooms: z
-      .number({
-        invalid_type_error: "Total rooms must be a number",
-      })
-      .optional(),
-    utilitiesDescription: z
-      .string({
-        invalid_type_error: "Utilities description must be a string",
       })
       .optional(),
     location: z
       .string({
+        required_error: "Location field is required",
         invalid_type_error: "Location must be a string",
       })
       .optional(),
     description: z
       .string({
+        required_error: "Description field is required",
         invalid_type_error: "Description must be a string",
       })
       .optional(),
-    rent: z
+    rentAmount: z
       .number({
+        required_error: "Rent Amount field is required",
         invalid_type_error: "Rent must be a number",
       })
       .optional(),
-    availability: z
-      .boolean({
-        invalid_type_error: "Availability must be true or false",
+    amenities: z
+      .string({
+        required_error: "amenities field is required",
+        invalid_type_error: "amenities must be a string",
       })
       .optional(),
-    advanceAmount: z
-      .number({
-        invalid_type_error: "Advance amount must be a number",
-      })
+    photos: z
+      .array(z.string().url("Each photo must be a valid URL"))
+      .nonempty("At least one photo is required")
       .optional(),
   }),
 });
