@@ -29,6 +29,17 @@ const flatShareRequestIntoDB = async (payload: TPayload, token: string) => {
       httpStatus.BAD_REQUEST,
       "You can not share request to your own flat"
     );
+  };
+
+  const isAlreadyRequested = await prisma.flatShare.findFirst({
+    where: {
+      flatId: payload.flatId,
+      userId: validUser.id
+    }
+  });
+
+  if(isAlreadyRequested){
+    throw new AppError(httpStatus.BAD_REQUEST, "You already requested on this flat")
   }
 
   const flatShareData = {
@@ -119,6 +130,9 @@ const getMyFlatShareRequestsFromDB = async (
     where: condition,
     skip: (page - 1) * limit,
     take: limit,
+    include: {
+      flat: true
+    },
     orderBy:
       options?.sortBy && options.sortOrder
         ? {

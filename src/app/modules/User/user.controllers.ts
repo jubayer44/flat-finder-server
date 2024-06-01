@@ -36,6 +36,17 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getMyProfileInfoF = catchAsync( async (req: Request, res: Response) => {
+  const token = req.headers?.authorization || "";
+  const result = await UserServices.getMyProfileInfoFromDB(token);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200, 
+    message: "Profile info retrieved successfully",
+    data: result
+  })
+})
+
 const updateUser = catchAsync(async (req: Request, res: Response) => {
   const token = req.headers.authorization || "";
 
@@ -49,8 +60,22 @@ const updateUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getMetaData = catchAsync( async (req: Request, res: Response) => {
+  const token = req.headers?.authorization || "";
+
+  const result = await UserServices.getMetaDataFromDB(token);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Meta Data retrieved successfully",
+    data: result
+  })
+})
+
 export const UserControllers = {
   createUser,
   getAllUsers,
   updateUser,
+  getMetaData,
+  getMyProfileInfoF
 };

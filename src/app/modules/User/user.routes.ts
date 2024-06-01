@@ -15,10 +15,18 @@ router.post(
 
 router.get("/users", auth(UserRole.ADMIN), UserControllers.getAllUsers);
 
+router.get("/me", auth(UserRole.ADMIN, UserRole.USER), UserControllers.getMyProfileInfoF);
+
 router.put(
   "/update-user",
   auth(UserRole.ADMIN, UserRole.USER),
   UserControllers.updateUser
+);
+
+router.get(
+  "/meta-data",
+  auth(UserRole.ADMIN, UserRole.USER),
+  UserControllers.getMetaData
 );
 
 export const UserRoutes = router;

@@ -28,7 +28,7 @@ model Flat {
   description String
   rentAmount  Float
   bedrooms    Int
-  amenities   String
+  amenities   String[]
   photos      String[]
   postedBy    String
   user        User        @relation(fields: [postedBy], references: [id])

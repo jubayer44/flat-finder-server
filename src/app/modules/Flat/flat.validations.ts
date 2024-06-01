@@ -19,10 +19,12 @@ const createFlat = z.object({
       invalid_type_error: "Rent must be a number",
     }),
     amenities: z
-      .string({
-        required_error: "amenities field is required",
-        invalid_type_error: "amenities must be a string",
-      })
+      .array(
+        z.string({
+          required_error: "amenities field is required",
+          invalid_type_error: "amenities must be a string",
+        })
+      )
       .optional(),
     photos: z
       .array(z.string().url("Each photo must be a valid URL"))
@@ -57,10 +59,12 @@ const updateFlat = z.object({
       })
       .optional(),
     amenities: z
-      .string({
-        required_error: "amenities field is required",
-        invalid_type_error: "amenities must be a string",
-      })
+      .array(
+        z.string({
+          required_error: "amenities field is required",
+          invalid_type_error: "amenities must be a string",
+        })
+      )
       .optional(),
     photos: z
       .array(z.string().url("Each photo must be a valid URL"))

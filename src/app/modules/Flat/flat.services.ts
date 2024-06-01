@@ -8,10 +8,10 @@ import { TPagination } from "../../interfaces/TPagination";
 import { TFlatFilterableFields } from "../../interfaces/common";
 
 const addFlatIntoDB = async (payload: Flat, token: string) => {
-  await isUserAuthorized(token);
+  const validUser = await isUserAuthorized(token);
 
   const result = await prisma.flat.create({
-    data: payload,
+    data: { ...payload, postedBy: validUser.id },
   });
 
   return result;
@@ -191,12 +191,6 @@ const updateFlatIntoDB = async (
 
   const updatedPhoto: string[] = [];
 
-  if (photos) {
-    photos.map((photo: string) => {
-      updatedPhoto.push(photo);
-    });
-  }
-
   const validUser = await isUserAuthorized(token);
 
   const flat = await prisma.flat.findUnique({
@@ -209,9 +203,11 @@ const updateFlatIntoDB = async (
     throw new AppError(httpStatus.NOT_FOUND, "Flat not found");
   }
 
-  flat.photos.map((photo) => {
-    updatedPhoto.push(photo);
-  });
+  if (photos) {
+    photos.map((photo: string) => {
+      updatedPhoto.push(photo);
+    });
+  }
 
   const result = await prisma.flat.update({
     where: {

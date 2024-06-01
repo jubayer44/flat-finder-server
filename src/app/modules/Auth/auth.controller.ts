@@ -7,7 +7,7 @@ import { AuthServices } from "./auth.services";
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthServices.loginUser(req.body);
 
-  res.cookie("refreshToken", result.refreshToken, {
+  res.cookie("refreshToken", result?.refreshToken, {
     secure: false,
     httpOnly: true,
   });

@@ -28,7 +28,7 @@ CREATE TABLE "flats" (
     "description" TEXT NOT NULL,
     "rentAmount" DOUBLE PRECISION NOT NULL,
     "bedrooms" INTEGER NOT NULL,
-    "amenities" TEXT NOT NULL,
+    "amenities" TEXT[],
     "photos" TEXT[],
     "postedBy" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -44,6 +44,7 @@ CREATE TABLE "flat_shares" (
     "userId" TEXT NOT NULL,
     "status" "FlatRequestStatus" NOT NULL DEFAULT 'PENDING',
     "space" INTEGER,
+    "message" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

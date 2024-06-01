@@ -108,6 +108,18 @@ const getAllUsersFromDB = async (
   };
 };
 
+const getMyProfileInfoFromDB = async(token: string) => {
+  const userInfo = await isUserAuthorized(token);
+  const userData = {
+    id: userInfo.id,
+    username: userInfo.username,
+    email: userInfo.email,
+    role: userInfo.role,
+    status: userInfo.status
+  }
+  return userData;
+}
+
 const updateUserIntoDB = async (
   token: string,
   payload: { username?: string; email?: string }
@@ -124,8 +136,63 @@ const updateUserIntoDB = async (
   return result;
 };
 
+const getMetaDataFromDB = async (token: string) => {
+  const validUser = await isUserAuthorized(token);
+
+  // Condition for user
+  const userMeta = [];
+  const myFlats = await prisma.flat.count({
+    where: { postedBy: validUser.id },
+  });
+  userMeta.push({ flatTotal: myFlats });
+
+  const myFlatRequests = await prisma.flatShare.count({
+    where: { userId: validUser.id },
+  });
+  userMeta.push({ flatRequestTotal: myFlatRequests });
+
+  const requestOnMyFlats = await prisma.flat.findMany({
+    where: {
+      postedBy: validUser.id,
+    },
+    include: {
+      requests: true
+    }
+  });
+
+  let requestCount = 0;
+
+  requestOnMyFlats?.map((flat)=> {
+    if(flat?.requests?.length > 0){
+      requestCount += flat.requests.length
+    }
+  });
+  userMeta.push({requestOnMyFlatTotal: requestCount});
+
+  // Condition for admin
+  const adminMeta = [];
+   if(validUser.role === UserRole.ADMIN){
+    const allFlatPosts = await prisma.flat.count();
+    adminMeta.push({flatTotal: allFlatPosts});
+
+    const allFlatShareRequests = await prisma.flatShare.count();
+    adminMeta.push({flatRequestTotal: allFlatShareRequests});
+
+    const allUser = await prisma.user.count();
+    adminMeta.push({userTotal: allUser});
+    return adminMeta;
+   }
+
+
+
+
+  return userMeta;
+};
+
 export const UserServices = {
   createUserIntoDB,
   getAllUsersFromDB,
   updateUserIntoDB,
+  getMetaDataFromDB,
+  getMyProfileInfoFromDB
 };
