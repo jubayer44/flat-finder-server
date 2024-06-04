@@ -35,6 +35,6 @@ export type TFlatFilterableFields = {
 };
 
 export type TUpdateFlatShareRequest = {
-  status?: FlatRequestStatus;
-  space?: number;
+  status: FlatRequestStatus;
+  flatId: string
 };

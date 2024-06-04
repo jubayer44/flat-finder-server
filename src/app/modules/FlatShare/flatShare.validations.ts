@@ -23,9 +23,11 @@ const createFlatShareRequest = z.object({
 
 const updateFlatShareRequest = z.object({
   body: z.object({
-    status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
-    message: z.string().optional(),
-    space: z.number().optional(),
+    status: z.enum(["PENDING", "APPROVED", "REJECTED"]),
+    flatId: z.string({
+      required_error: "FlatId field is required",
+      invalid_type_error: "FlatId must be a string",
+    }),
   }),
 });
 

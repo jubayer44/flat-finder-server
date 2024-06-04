@@ -162,7 +162,11 @@ const getAllRequestsOnMyFlatPostFromDB = async (token: string) => {
       postedBy: validUser.id,
     },
     include: {
-      requests: true,
+      requests: {
+        include: {
+          user: true
+        }
+      },
     },
   });
 
@@ -176,39 +180,38 @@ const updateFlatShareRequestIntoDB = async (
 ) => {
   const validUser = await isUserAuthorized(token);
 
+  const flat = await prisma.flat.findUnique({
+    where: {
+      id: payload.flatId,
+      postedBy: validUser.id,
+    },
+  });
+
+  if (!flat) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized!");
+  };
+
   const flatShareInfo = await prisma.flatShare.findUnique({
     where: {
       id: flatShareId,
+      flatId: flat.id
     },
   });
 
-  if (!flatShareInfo) {
-    throw new AppError(httpStatus.NOT_FOUND, "Flat Share is not exists");
-  }
-
-  if (validUser.role === UserRole.USER) {
-    const flatShare = await prisma.flatShare.findUnique({
-      where: {
-        id: flatShareId,
-        userId: validUser.id,
-      },
-    });
-
-    if (!flatShare) {
-      throw new AppError(
-        httpStatus.UNAUTHORIZED,
-        "This is not your Flat share request"
-      );
-    }
-  }
+  if(!flatShareInfo){
+    throw new AppError(httpStatus.NOT_FOUND, "Flat Share not found");
+  };
 
   const result = await prisma.flatShare.update({
     where: {
-      id: flatShareId,
+      id: flatShareId
     },
-    data: payload,
+    data: {
+      status: payload.status
+    }
   });
-  return result;
+
+  return result
 };
 
 const deleteFlatShareRequestFromDB = async (

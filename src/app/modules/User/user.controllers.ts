@@ -36,16 +36,16 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getMyProfileInfoF = catchAsync( async (req: Request, res: Response) => {
+const getMyProfileInfo = catchAsync(async (req: Request, res: Response) => {
   const token = req.headers?.authorization || "";
   const result = await UserServices.getMyProfileInfoFromDB(token);
   sendResponse(res, {
     success: true,
-    statusCode: 200, 
+    statusCode: 200,
     message: "Profile info retrieved successfully",
-    data: result
-  })
-})
+    data: result,
+  });
+});
 
 const updateUser = catchAsync(async (req: Request, res: Response) => {
   const token = req.headers.authorization || "";
@@ -60,7 +60,7 @@ const updateUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getMetaData = catchAsync( async (req: Request, res: Response) => {
+const getMetaData = catchAsync(async (req: Request, res: Response) => {
   const token = req.headers?.authorization || "";
 
   const result = await UserServices.getMetaDataFromDB(token);
@@ -68,14 +68,47 @@ const getMetaData = catchAsync( async (req: Request, res: Response) => {
     success: true,
     statusCode: 200,
     message: "Meta Data retrieved successfully",
-    data: result
-  })
-})
+    data: result,
+  });
+});
+
+const updateUserRoleOrStatus = catchAsync(
+  async (req: Request, res: Response) => {
+    const token = req.headers?.authorization || "";
+    const id = req.params?.id;
+    const payload = req.body;
+    const result = await UserServices.updateUserRoleOrStatus(
+      token,
+      id,
+      payload
+    );
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "User updated successfully",
+      data: result,
+    });
+  }
+);
+
+const deleteUser = catchAsync(async (req: Request, res: Response) => {
+  const token = req.headers?.authorization || "";
+  const id = req.params?.id;
+  const result = await UserServices.deleteUserFromDB(token, id);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "User deleted successfully",
+    data: result,
+  });
+});
 
 export const UserControllers = {
   createUser,
   getAllUsers,
   updateUser,
   getMetaData,
-  getMyProfileInfoF
+  getMyProfileInfo,
+  updateUserRoleOrStatus,
+  deleteUser,
 };

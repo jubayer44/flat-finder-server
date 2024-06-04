@@ -15,12 +15,10 @@ router.post(
 
 router.get("/users", auth(UserRole.ADMIN), UserControllers.getAllUsers);
 
-router.get("/me", auth(UserRole.ADMIN, UserRole.USER), UserControllers.getMyProfileInfoF);
-
-router.put(
-  "/update-user",
+router.get(
+  "/me",
   auth(UserRole.ADMIN, UserRole.USER),
-  UserControllers.updateUser
+  UserControllers.getMyProfileInfo
 );
 
 router.get(
@@ -28,5 +26,19 @@ router.get(
   auth(UserRole.ADMIN, UserRole.USER),
   UserControllers.getMetaData
 );
+
+router.put(
+  "/update-user",
+  auth(UserRole.ADMIN, UserRole.USER),
+  UserControllers.updateUser
+);
+
+router.patch(
+  "/user/:id",
+  auth(UserRole.ADMIN),
+  UserControllers.updateUserRoleOrStatus
+);
+
+router.delete("/user/:id", auth(UserRole.ADMIN), UserControllers.deleteUser);
 
 export const UserRoutes = router;

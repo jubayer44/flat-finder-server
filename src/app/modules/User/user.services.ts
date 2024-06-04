@@ -108,17 +108,17 @@ const getAllUsersFromDB = async (
   };
 };
 
-const getMyProfileInfoFromDB = async(token: string) => {
+const getMyProfileInfoFromDB = async (token: string) => {
   const userInfo = await isUserAuthorized(token);
   const userData = {
     id: userInfo.id,
     username: userInfo.username,
     email: userInfo.email,
     role: userInfo.role,
-    status: userInfo.status
-  }
+    status: userInfo.status,
+  };
   return userData;
-}
+};
 
 const updateUserIntoDB = async (
   token: string,
@@ -156,37 +156,74 @@ const getMetaDataFromDB = async (token: string) => {
       postedBy: validUser.id,
     },
     include: {
-      requests: true
-    }
+      requests: true,
+    },
   });
 
   let requestCount = 0;
 
-  requestOnMyFlats?.map((flat)=> {
-    if(flat?.requests?.length > 0){
-      requestCount += flat.requests.length
+  requestOnMyFlats?.map((flat) => {
+    if (flat?.requests?.length > 0) {
+      requestCount += flat.requests.length;
     }
   });
-  userMeta.push({requestOnMyFlatTotal: requestCount});
+  userMeta.push({ requestOnMyFlatTotal: requestCount });
 
   // Condition for admin
   const adminMeta = [];
-   if(validUser.role === UserRole.ADMIN){
+  if (validUser.role === UserRole.ADMIN) {
     const allFlatPosts = await prisma.flat.count();
-    adminMeta.push({flatTotal: allFlatPosts});
+    adminMeta.push({ flatTotal: allFlatPosts });
 
     const allFlatShareRequests = await prisma.flatShare.count();
-    adminMeta.push({flatRequestTotal: allFlatShareRequests});
+    adminMeta.push({ flatRequestTotal: allFlatShareRequests });
 
     const allUser = await prisma.user.count();
-    adminMeta.push({userTotal: allUser});
+    adminMeta.push({ userTotal: allUser });
     return adminMeta;
-   }
-
-
-
+  }
 
   return userMeta;
+};
+
+const updateUserRoleOrStatus = async (
+  token: string,
+  id: string,
+  payload: { role?: UserRole; status?: UserStatus }
+) => {
+  const validUser = await isUserAuthorized(token);
+
+  if (validUser.role !== UserRole.ADMIN) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Only Admin can update other users"
+    );
+  }
+
+  const result = await prisma.user.update({
+    where: {
+      id,
+    },
+    data: payload,
+  });
+  return result;
+};
+
+const deleteUserFromDB = async (token: string, id: string) => {
+  const validUser = await isUserAuthorized(token);
+  if (validUser.role !== UserRole.ADMIN) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Only Admin can delete other users"
+    );
+  }
+
+  const result = await prisma.user.delete({
+    where: {
+      id,
+    },
+  });
+  return result;
 };
 
 export const UserServices = {
@@ -194,5 +231,7 @@ export const UserServices = {
   getAllUsersFromDB,
   updateUserIntoDB,
   getMetaDataFromDB,
-  getMyProfileInfoFromDB
+  getMyProfileInfoFromDB,
+  updateUserRoleOrStatus,
+  deleteUserFromDB,
 };

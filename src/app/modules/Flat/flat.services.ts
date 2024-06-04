@@ -195,13 +195,24 @@ const updateFlatIntoDB = async (
 
   const flat = await prisma.flat.findUnique({
     where: {
+      id
+    },
+  });
+
+  if(!flat){
+    throw new AppError(httpStatus.NOT_FOUND, "Flat not found or you are not authorized");
+  }
+
+  const userFlat = await prisma.flat.findUnique({
+    where: {
       id,
       postedBy: validUser.id,
     },
   });
-  if (!flat) {
-    throw new AppError(httpStatus.NOT_FOUND, "Flat not found");
-  }
+
+  if (!userFlat && validUser.role !== UserRole.ADMIN) {
+    throw new AppError(httpStatus.NOT_FOUND, "Flat not found or you are not authorized");
+  };
 
   if (photos) {
     photos.map((photo: string) => {
@@ -231,22 +242,32 @@ const deleteFlatImageFromDB = async (
 
   const validUser = await isUserAuthorized(token);
 
-  const flatInfo = await prisma.flat.findUnique({
+  const flat = await prisma.flat.findUnique({
+    where: {
+      id: flatId,
+    },
+  });
+
+  if(!flat){
+    throw new AppError(httpStatus.NOT_FOUND, "Flat not found");
+  };
+
+  const userFlat = await prisma.flat.findUnique({
     where: {
       id: flatId,
       postedBy: validUser.id,
     },
   });
 
-  if (!flatInfo) {
-    throw new AppError(httpStatus.NOT_FOUND, "Flat not found");
-  }
+  if(validUser.role === UserRole.USER && !userFlat){
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized to delete this image");
+  };
 
-  flatInfo.photos.map((photo: string) => {
-    if (photo !== imageLink) {
-      images.push(photo);
-    }
-  });
+    flat.photos.map((photo: string) => {
+      if (photo !== imageLink) {
+        images.push(photo);
+      }
+    });
 
   const updateImages = await prisma.flat.update({
     where: {

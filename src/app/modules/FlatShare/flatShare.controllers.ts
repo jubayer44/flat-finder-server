@@ -83,7 +83,6 @@ const getAllRequestsOnMyFlatPost = catchAsync(
     if (result && result[0]?.id) {
       result.map((item: TRequestOnMyPost) => {
         if (item?.requests?.length) {
-          console.log(item);
           data.push(item);
         }
       });
@@ -103,7 +102,7 @@ const getAllRequestsOnMyFlatPost = catchAsync(
 const updateFlatShareRequest = catchAsync(
   async (req: Request, res: Response) => {
     const token = req.headers.authorization || "";
-    const { flatShareId } = req.params;
+    const flatShareId  = req.params?.flatShareId;
 
     const result = await FlatShareServices.updateFlatShareRequestIntoDB(
       flatShareId,
@@ -113,7 +112,7 @@ const updateFlatShareRequest = catchAsync(
     sendResponse(res, {
       success: true,
       statusCode: httpStatus.OK,
-      message: "Flat share request updated successfully",
+      message: "Flat Share request updated successfully",
       data: result,
     });
   }
