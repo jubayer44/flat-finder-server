@@ -8,8 +8,11 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthServices.loginUser(req.body);
 
   res.cookie("refreshToken", result?.refreshToken, {
-    secure: false,
+    secure: true, 
     httpOnly: true,
+    sameSite: 'none',
+    domain: 'flatfinder-chi.vercel.app',
+    path: '/',
   });
 
   sendResponse(res, {
